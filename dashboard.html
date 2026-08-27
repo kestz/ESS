@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kashomba Electrical System - Dashboard</title>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+    
+    <!-- Dashboard Container -->
+    <div class="dashboard-container">
+        
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            
+            <!-- Logo -->
+            <div class="sidebar-logo">
+                <img src="assets/logo.png" alt="Kashomba Electrical" class="sidebar-logo-img" onerror="this.style.display='none'">
+                <div>
+                    <h2>KASHOMBA</h2>
+                    <p>ELECTRICAL SYSTEM</p>
+                </div>
+            </div>
+            
+            <!-- Navigation -->
+            <nav class="sidebar-nav">
+                <ul>
+                    <li>
+                        <a href="#" class="nav-link active" data-page="dashboard">
+                            <span class="nav-icon">📊</span>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-link" data-page="customers">
+                            <span class="nav-icon">👥</span>
+                            <span>Customers</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-link" data-page="invoices">
+                            <span class="nav-icon">📄</span>
+                            <span>Invoices</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-link" data-page="payments">
+                            <span class="nav-icon">💰</span>
+                            <span>Payments</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-link" data-page="expenses">
+                            <span class="nav-icon">💸</span>
+                            <span>Expenses</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-link" data-page="reports">
+                            <span class="nav-icon">📈</span>
+                            <span>Reports</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-link admin-only" data-page="users" style="display: none;">
+                            <span class="nav-icon">🔐</span>
+                            <span>Users</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-link admin-only" data-page="settings" style="display: none;">
+                            <span class="nav-icon">⚙️</span>
+                            <span>Settings</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-link admin-only" data-page="activity" style="display: none;">
+                            <span class="nav-icon">📝</span>
+                            <span>Activity Logs</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            
+            <!-- Sidebar Footer -->
+            <div class="sidebar-footer">
+                <button class="btn-logout" onclick="handleLogout()">
+                    <span>🚪</span> Logout
+                </button>
+            </div>
+            
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="main-content">
+            
+            <!-- Top Bar -->
+            <header class="top-bar">
+                <div class="top-bar-left">
+                    <button class="menu-toggle-btn" onclick="toggleSidebar()">☰</button>
+                    <h1 class="page-title" id="pageTitle">Dashboard</h1>
+                </div>
+                <div class="top-bar-right">
+                    <div class="user-info">
+                        <span class="user-avatar">👤</span>
+                        <div>
+                            <p class="user-full-name">Loading...</p>
+                            <p class="user-role">...</p>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            
+            <!-- Content Area -->
+            <div class="content-area">
+                
+                <!-- Success Message -->
+                <div id="successMessage" class="alert alert-success" style="display: none;"></div>
+                
+                <!-- Error Message -->
+                <div id="errorMessage" class="alert alert-error" style="display: none;"></div>
+                
+                <!-- DASHBOARD PAGE -->
+                <div class="page-content" id="dashboardPage">
+                    <h2 class="section-heading">System Overview</h2>
+                    
+                    <!-- Unpaid Invoices Reminder -->
+                    <div id="unpaidReminderContainer"></div>
+                    
+                    <div class="stats-grid">
+                        <div class="stat-card gold">
+                            <div class="stat-icon">👥</div>
+                            <div class="stat-value" id="totalCustomers">0</div>
+                            <div class="stat-label">Total Customers</div>
+                        </div>
+                        <div class="stat-card teal">
+                            <div class="stat-icon">📄</div>
+                            <div class="stat-value" id="totalInvoices">0</div>
+                            <div class="stat-label">Total Invoices</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">💰</div>
+                            <div class="stat-value" id="totalPayments">0</div>
+                            <div class="stat-label">Total Payments (Tsh)</div>
+                        </div>
+                        <div class="stat-card black">
+                            <div class="stat-icon">💸</div>
+                            <div class="stat-value" id="totalExpenses">0</div>
+                            <div class="stat-label">Total Expenses (Tsh)</div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title">Recent Invoices</span>
+                            <button class="btn btn-primary btn-sm" onclick="navigateTo('invoices')">View All</button>
+                        </div>
+                        <div class="table-wrapper">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Invoice No</th>
+                                        <th>Customer</th>
+                                        <th>Date</th>
+                                        <th>Total (Tsh)</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recentInvoicesTable">
+                                    <tr>
+                                        <td colspan="5" class="text-center">Loading...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- CUSTOMERS PAGE -->
+                <div class="page-content" id="customersPage" style="display: none;">
+                    <h2 class="section-heading">Customer Management</h2>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title">All Customers</span>
+                            <button class="btn btn-gold" onclick="openCustomerModal()">+ Add Customer</button>
+                        </div>
+                        
+                        <div class="search-bar">
+                            <span class="search-icon">🔍</span>
+                            <input type="text" id="customerSearch" placeholder="Search by name, phone, or address...">
+                        </div>
+                        
+                        <div class="table-wrapper">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Customer ID</th>
+                                        <th>Name</th>
+                                        <th>Phone</th>
+                                        <th>Address</th>
+                                        <th>Email</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="customersTableBody">
+                                    <tr>
+                                        <td colspan="6" class="text-center">Loading...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- INVOICES PAGE -->
+                <div class="page-content" id="invoicesPage" style="display: none;">
+                    <h2 class="section-heading">Invoice Management</h2>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title">All Invoices</span>
+                            <button class="btn btn-gold" onclick="openInvoiceModal()">+ Create Invoice</button>
+                        </div>
+                        
+                        <div class="search-bar">
+                            <span class="search-icon">🔍</span>
+                            <input type="text" id="invoiceSearch" placeholder="Search by invoice no, customer, or location...">
+                        </div>
+                        
+                        <div class="table-wrapper">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Invoice No</th>
+                                        <th>Customer</th>
+                                        <th>Date</th>
+                                        <th>Total (Tsh)</th>
+                                        <th>Balance (Tsh)</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="invoicesTableBody">
+                                    <tr>
+                                        <td colspan="7" class="text-center">Loading...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- PAYMENTS PAGE -->
+                <div class="page-content" id="paymentsPage" style="display: none;">
+                    <h2 class="section-heading">Payment Tracking</h2>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title">All Payments</span>
+                            <button class="btn btn-gold" onclick="openPaymentModal()">+ Record Payment</button>
+                        </div>
+                        
+                        <div class="table-wrapper">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Payment ID</th>
+                                        <th>Invoice No</th>
+                                        <th>Amount (Tsh)</th>
+                                        <th>Date</th>
+                                        <th>Method</th>
+                                        <th>Recorded By</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="paymentsTableBody">
+                                    <tr>
+                                        <td colspan="6" class="text-center">Loading...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- EXPENSES PAGE -->
+                <div class="page-content" id="expensesPage" style="display: none;">
+                    <h2 class="section-heading">Expense Management</h2>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title">All Expenses</span>
+                            <button class="btn btn-gold" onclick="openExpenseModal()">+ Add Expense</button>
+                        </div>
+                        
+                        <div class="table-wrapper">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Expense ID</th>
+                                        <th>Invoice No</th>
+                                        <th>Date</th>
+                                        <th>Category</th>
+                                        <th>Payee</th>
+                                        <th>Amount (Tsh)</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="expensesTableBody">
+                                    <tr>
+                                        <td colspan="7" class="text-center">Loading...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- REPORTS PAGE -->
+                <div class="page-content" id="reportsPage" style="display: none;">
+                    <h2 class="section-heading">Reports & Downloads</h2>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title">Filter Reports</span>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Report Type</label>
+                                <select id="reportType" class="form-control">
+                                    <option value="invoices">Invoices Report</option>
+                                    <option value="customers">Customers Report</option>
+                                    <option value="payments">Payments Report</option>
+                                    <option value="expenses">Expenses Report</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Time Period</label>
+                                <select id="reportTimeFilter" class="form-control">
+                                    <option value="today" selected>Today</option>
+                                    <option value="all">All Time</option>
+                                    <option value="month">This Month</option>
+                                    <option value="year">This Year</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Status Filter</label>
+                                <select id="reportStatusFilter" class="form-control">
+                                    <option value="">All Statuses</option>
+                                    <option value="Pending">Pending</option>
+                                    <option value="In Progress">In Progress</option>
+                                    <option value="Completed">Completed</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Date From</label>
+                                <input type="date" id="reportDateFrom" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label>Date To</label>
+                                <input type="date" id="reportDateTo" class="form-control">
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <button class="btn btn-primary btn-block" onclick="generateReport()">Generate Report</button>
+                            </div>
+                            <div class="form-group">
+                                <button class="btn btn-gold btn-block" onclick="downloadReportPDF()">📥 Download PDF</button>
+                            </div>
+                            <div class="form-group">
+                                <button class="btn btn-black btn-block" onclick="downloadReportCSV()">📥 Download CSV</button>
+                            </div>
+                        </div>
+                        
+                        <div class="table-wrapper mt-20">
+                            <table class="table">
+                                <thead id="reportsTableHead">
+                                    <tr>
+                                        <th>Invoice No</th>
+                                        <th>Customer</th>
+                                        <th>Date</th>
+                                        <th>Total (Tsh)</th>
+                                        <th>Balance (Tsh)</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="reportsTableBody">
+                                    <tr>
+                                        <td colspan="7" class="text-center">Select filters and generate report</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- USERS PAGE (Admin Only) -->
+                <div class="page-content" id="usersPage" style="display: none;">
+                    <h2 class="section-heading">User Management</h2>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title">All Users</span>
+                            <button class="btn btn-gold" onclick="openUserModal()">+ Add User</button>
+                        </div>
+                        
+                        <div class="table-wrapper">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>User ID</th>
+                                        <th>Full Name</th>
+                                        <th>Role</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="usersTableBody">
+                                    <tr>
+                                        <td colspan="5" class="text-center">Loading...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- SETTINGS PAGE (Admin Only) -->
+                <div class="page-content" id="settingsPage" style="display: none;">
+                    <h2 class="section-heading">Company Settings</h2>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title">Company Information</span>
+                        </div>
+                        
+                        <form id="settingsForm">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Company Name</label>
+                                    <input type="text" id="settingCompanyName" class="form-control" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Company Tagline</label>
+                                    <input type="text" id="settingCompanyTagline" class="form-control">
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Company Phone</label>
+                                    <input type="text" id="settingCompanyPhone" class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label>Company Email</label>
+                                    <input type="email" id="settingCompanyEmail" class="form-control">
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Company Address</label>
+                                <input type="text" id="settingCompanyAddress" class="form-control">
+                            </div>
+                            
+                            <hr class="mb-20">
+                            
+                            <h3 class="mb-20">Bank Details</h3>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Bank Name</label>
+                                    <input type="text" id="settingBankName" class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label>Bank Account No</label>
+                                    <input type="text" id="settingBankAccountNo" class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label>Bank Account Name</label>
+                                    <input type="text" id="settingBankAccountName" class="form-control">
+                                </div>
+                            </div>
+                            
+                            <hr class="mb-20">
+                            
+                            <h3 class="mb-20">Mobile Payment</h3>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Mobile Payment Name</label>
+                                    <input type="text" id="settingMobilePaymentName" class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label>Mobile Payment No</label>
+                                    <input type="text" id="settingMobilePaymentNo" class="form-control">
+                                </div>
+                            </div>
+                            
+                            <hr class="mb-20">
+                            
+                            <h3 class="mb-20">Invoice Settings</h3>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Currency</label>
+                                    <input type="text" id="settingCurrency" class="form-control" value="Tsh">
+                                </div>
+                                <div class="form-group">
+                                    <label>Invoice Terms</label>
+                                    <input type="text" id="settingInvoiceTerms" class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label>Invoice Validity Days</label>
+                                    <input type="number" id="settingInvoiceValidityDays" class="form-control">
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary btn-lg btn-block">Save Settings</button>
+                        </form>
+                    </div>
+                    
+                    <!-- Change Password -->
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title">Change Password</span>
+                        </div>
+                        
+                        <form id="passwordChangeForm">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Current Password</label>
+                                    <input type="password" id="currentPassword" class="form-control" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>New Password</label>
+                                    <input type="password" id="newPassword" class="form-control" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Confirm New Password</label>
+                                    <input type="password" id="confirmPassword" class="form-control" required>
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-gold btn-lg btn-block">Change Password</button>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- ACTIVITY LOGS PAGE (Admin Only) -->
+                <div class="page-content" id="activityPage" style="display: none;">
+                    <h2 class="section-heading">Activity Logs</h2>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title">System Activities</span>
+                        </div>
+                        
+                        <div class="table-wrapper">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Date Time</th>
+                                        <th>User</th>
+                                        <th>Action</th>
+                                        <th>Module</th>
+                                        <th>Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="activityLogsTableBody">
+                                    <tr>
+                                        <td colspan="5" class="text-center">Loading...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+            
+        </main>
+        
+    </div>
+    
+    <!-- JavaScript -->
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script src="js/customers.js"></script>
+    <script src="js/invoices.js"></script>
+    <script src="js/payments.js"></script>
+    <script src="js/expenses.js"></script>
+    <script src="js/reports.js"></script>
+    
+</body>
+</html>

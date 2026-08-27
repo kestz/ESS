@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kashomba Electrical System - Login</title>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/login.css">
+</head>
+<body>
+    
+    <!-- Login Container -->
+    <div class="login-container">
+        
+        <!-- Login Card -->
+        <div class="login-card">
+            
+            <!-- Logo Section -->
+            <div class="login-logo">
+                <img src="assets/logo.png" alt="Kashomba Electrical" class="login-logo-img" onerror="this.style.display='none'">
+                <h1 class="login-company-name">KASHOMBA</h1>
+                <p class="login-company-tagline">ELECTRICAL SOLUTION</p>
+            </div>
+            
+            <!-- Error Message -->
+            <div id="loginError" class="login-error" style="display: none;"></div>
+            
+            <!-- Login Form -->
+            <form id="loginForm" class="login-form">
+                
+                <!-- Username -->
+                <div class="form-group">
+                    <label for="userName">Username</label>
+                    <input type="text" id="userName" class="form-input" placeholder="Enter your full name or user ID" required autocomplete="off">
+                </div>
+                
+                <!-- Password -->
+                <div class="form-group">
+                    <label for="userPassword">Password</label>
+                    <input type="password" id="userPassword" class="form-input" placeholder="Enter your password" required>
+                </div>
+                
+                <!-- Login Button -->
+                <button type="submit" id="loginButton" class="btn-login">
+                    <span class="btn-text">Login to System</span>
+                </button>
+                
+            </form>
+            
+            <!-- Footer -->
+            <div class="login-footer">
+                <p>&copy; 2026 Kashomba Electrical Solution. All rights reserved.</p>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+    <!-- JavaScript -->
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/utils.js"></script>
+    
+    <script>
+        // Handle login form submission
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const usernameValue = document.getElementById('userName').value.trim();
+            const passwordValue = document.getElementById('userPassword').value;
+            
+            const button = document.getElementById('loginButton');
+            const btnText = button.querySelector('.btn-text');
+            
+            // Validate
+            if (!usernameValue || !passwordValue) {
+                showLoginError('Please enter both username and password');
+                return;
+            }
+            
+            // Show loading
+            button.disabled = true;
+            btnText.textContent = 'Logging in...';
+            
+            const success = await handleLogin(usernameValue, passwordValue);
+            
+            if (success) {
+                window.location.href = 'dashboard.html';
+            } else {
+                // Reset button
+                button.disabled = false;
+                btnText.textContent = 'Login to System';
+            }
+        });
+    </script>
+    
+</body>
+</html>
