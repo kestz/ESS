@@ -1,33 +1,23 @@
 // ============================================
-// KASHOMBA ELECTRICAL SYSTEM - CUSTOMERS LOGIC v2
+// KASHOMBA ELECTRICAL SYSTEM - CUSTOMERS LOGIC v5
+// With Double-click Prevention + Improved Validation
 // ============================================
 
-// ============================================
-// VALIDATE PHONE NUMBER
-// ============================================
 function isValidPhoneNumber(phone) {
     if (!phone) {
         return false;
     }
     
-    // Remove spaces, dashes, and parentheses
-    const cleanPhone = phone.replace(/[\s\-\(\)]/g, '');
+    // Remove spaces, dashes, parentheses, dots
+    const cleanPhone = phone.replace(/[\s\-\(\)\.]/g, '');
     
-    // Check local format: 0XXXXXXXXX (10 digits starting with 0)
     const localRegex = /^0\d{9}$/;
-    
-    // Check international format: +255XXXXXXXXX (12 digits starting with +255)
     const internationalRegex = /^\+255\d{9}$/;
-    
-    // Check international without plus: 255XXXXXXXXX (12 digits starting with 255)
     const internationalNoPlusRegex = /^255\d{9}$/;
     
     return localRegex.test(cleanPhone) || internationalRegex.test(cleanPhone) || internationalNoPlusRegex.test(cleanPhone);
 }
 
-// ============================================
-// LOAD CUSTOMERS TABLE
-// ============================================
 function loadCustomersTable() {
     const tbody = document.getElementById('customersTableBody');
     
@@ -35,12 +25,19 @@ function loadCustomersTable() {
         return;
     }
     
-    const customers = allSystemData.customers;
+    const customers = allSystemData.customers || [];
     
     if (customers.length === 0) {
         tbody.innerHTML = '<tr><td colspan="6" class="text-center">No customers found</td></tr>';
         return;
     }
+    
+    // Sort by Customer ID (newest first)
+    customers.sort((a, b) => {
+        const idA = (a['Customer ID'] || '').toString();
+        const idB = (b['Customer ID'] || '').toString();
+        return idB.localeCompare(idA);
+    });
     
     tbody.innerHTML = '';
     
@@ -50,17 +47,17 @@ function loadCustomersTable() {
         const row = document.createElement('tr');
         
         const deleteButton = isAdminUser 
-            ? `<button class="btn btn-danger btn-sm delete-btn" onclick="deleteCustomer('${customer['Customer ID']}')">🗑️ Delete</button>`
+            ? `<button class="btn btn-danger btn-sm delete-btn" onclick="deleteCustomer('${escapeHtml(customer['Customer ID'])}')">Delete</button>`
             : '';
         
         row.innerHTML = `
-            <td><strong>${customer['Customer ID']}</strong></td>
-            <td>${customer['Customer Name'] || '-'}</td>
-            <td>${customer['Phone Number'] || '-'}</td>
-            <td>${customer['Address / Region'] || '-'}</td>
-            <td>${customer['Email'] || '-'}</td>
+            <td><strong>${escapeHtml(customer['Customer ID'] || '-')}</strong></td>
+            <td>${escapeHtml(customer['Customer Name'] || '-')}</td>
+            <td>${escapeHtml(customer['Phone Number'] || '-')}</td>
+            <td>${escapeHtml(customer['Address / Region'] || '-')}</td>
+            <td>${escapeHtml(customer['Email'] || '-')}</td>
             <td>
-                <button class="btn btn-primary btn-sm" onclick="editCustomer('${customer['Customer ID']}')">✏️ Edit</button>
+                <button class="btn btn-primary btn-sm" onclick="editCustomer('${escapeHtml(customer['Customer ID'])}')">Edit</button>
                 ${deleteButton}
             </td>
         `;
@@ -69,9 +66,6 @@ function loadCustomersTable() {
     });
 }
 
-// ============================================
-// OPEN CUSTOMER MODAL
-// ============================================
 function openCustomerModal(customerId = null) {
     const modal = document.createElement('div');
     modal.className = 'modal-overlay';
@@ -80,7 +74,7 @@ function openCustomerModal(customerId = null) {
     let customer = null;
     
     if (customerId) {
-        customer = allSystemData.customers.find(c => c['Customer ID'] === customerId);
+        customer = (allSystemData.customers || []).find(c => c['Customer ID'] === customerId);
     }
     
     modal.innerHTML = `
@@ -93,32 +87,32 @@ function openCustomerModal(customerId = null) {
             <form id="customerForm">
                 <div class="form-group">
                     <label>Customer Name *</label>
-                    <input type="text" id="customerName" class="form-control" value="${customer ? customer['Customer Name'] : ''}" required>
+                    <input type="text" id="customerName" class="form-control" value="${customer ? escapeHtml(customer['Customer Name']) : ''}" required>
                 </div>
                 
                 <div class="form-row">
                     <div class="form-group">
                         <label>Phone Number *</label>
-                        <input type="text" id="customerPhone" class="form-control" placeholder="e.g. 0712345678 au +255712345678" value="${customer ? customer['Phone Number'] : ''}" required>
-                        <small style="color: #666;">Format: 0XXXXXXXXX au +255XXXXXXXXX</small>
+                        <input type="text" id="customerPhone" class="form-control" placeholder="e.g. 0712345678 or +255712345678" value="${customer ? escapeHtml(customer['Phone Number']) : ''}" required>
+                        <small style="color: #666;">Format: 0XXXXXXXXX or +255XXXXXXXXX</small>
                     </div>
                     <div class="form-group">
                         <label>Email</label>
-                        <input type="email" id="customerEmail" class="form-control" value="${customer ? customer['Email'] : ''}">
+                        <input type="email" id="customerEmail" class="form-control" value="${customer ? escapeHtml(customer['Email']) : ''}">
                     </div>
                 </div>
                 
                 <div class="form-group">
                     <label>Address / Region</label>
-                    <input type="text" id="customerAddress" class="form-control" value="${customer ? customer['Address / Region'] : ''}">
+                    <input type="text" id="customerAddress" class="form-control" value="${customer ? escapeHtml(customer['Address / Region']) : ''}">
                 </div>
                 
                 <div class="form-group">
                     <label>P.O. Box</label>
-                    <input type="text" id="customerPOBox" class="form-control" value="${customer ? customer['P.O. Box'] : ''}">
+                    <input type="text" id="customerPOBox" class="form-control" value="${customer ? escapeHtml(customer['P.O. Box']) : ''}">
                 </div>
                 
-                <button type="submit" class="btn btn-primary btn-block">
+                <button type="submit" class="btn btn-primary btn-block" id="saveCustomerBtn">
                     ${customer ? 'Update Customer' : 'Save Customer'}
                 </button>
             </form>
@@ -127,30 +121,48 @@ function openCustomerModal(customerId = null) {
     
     document.body.appendChild(modal);
     
-    // Handle form submission
     document.getElementById('customerForm').addEventListener('submit', async function(e) {
         e.preventDefault();
         
+        const submitButton = this.querySelector('#saveCustomerBtn');
+        
+        // Prevent double submission
+        if (submitButton.disabled) {
+            return;
+        }
+        
+        const originalText = submitButton.innerHTML;
+        showButtonLoading(submitButton, 'Saving...');
+        
         const phoneNumber = document.getElementById('customerPhone').value.trim();
         
-        // Validate phone number
         if (!isValidPhoneNumber(phoneNumber)) {
+            hideButtonLoading(submitButton, originalText);
             showError('Invalid phone number. Use format: 0XXXXXXXXX or +255XXXXXXXXX');
+            return;
+        }
+        
+        const email = document.getElementById('customerEmail').value.trim();
+        
+        // Validate email kama imejazwa
+        if (email && !isValidEmail(email)) {
+            hideButtonLoading(submitButton, originalText);
+            showError('Invalid email format. Please enter a valid email address.');
             return;
         }
         
         const customerData = {
             customerName: document.getElementById('customerName').value.trim(),
             phoneNumber: phoneNumber,
-            email: document.getElementById('customerEmail').value.trim(),
+            email: email,
             address: document.getElementById('customerAddress').value.trim(),
             poBox: document.getElementById('customerPOBox').value.trim(),
             userId: userId,
             fullName: userFullName
         };
         
-        // Validate
         if (!customerData.customerName || !customerData.phoneNumber) {
+            hideButtonLoading(submitButton, originalText);
             showError('Customer Name and Phone Number are required');
             return;
         }
@@ -164,10 +176,12 @@ function openCustomerModal(customerId = null) {
             result = await fetchData('addCustomer', customerData);
         }
         
+        hideButtonLoading(submitButton, originalText);
+        
         if (result.success) {
             showSuccess(result.message);
             closeModal('customerModal');
-            await loadAllSystemData();
+            await refreshDataAfterSave();
             loadCustomersTable();
             loadDashboardStats();
         } else {
@@ -176,16 +190,10 @@ function openCustomerModal(customerId = null) {
     });
 }
 
-// ============================================
-// EDIT CUSTOMER
-// ============================================
 function editCustomer(customerId) {
     openCustomerModal(customerId);
 }
 
-// ============================================
-// DELETE CUSTOMER (Admin only)
-// ============================================
 async function deleteCustomer(customerId) {
     if (!isAdmin()) {
         showError('Only Admin can delete. Please contact your administrator.');
@@ -204,20 +212,10 @@ async function deleteCustomer(customerId) {
     
     if (result.success) {
         showSuccess(result.message);
-        await loadAllSystemData();
+        await refreshDataAfterSave();
         loadCustomersTable();
         loadDashboardStats();
     } else {
         showError(result.message);
-    }
-}
-
-// ============================================
-// CLOSE MODAL
-// ============================================
-function closeModal(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) {
-        modal.remove();
     }
 }

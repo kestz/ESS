@@ -1,13 +1,30 @@
 // ============================================
-// KASHOMBA ELECTRICAL SYSTEM - INVOICES LOGIC v4
+// KASHOMBA ELECTRICAL SYSTEM - INVOICES LOGIC v7
+// Fixed: Date format for input fields
 // ============================================
 
-// Invoice items array
 let invoiceItemsList = [];
 
 // ============================================
-// LOAD INVOICES TABLE
+// FORMAT DATE FOR INPUT (yyyy-MM-dd)
 // ============================================
+function formatDateForInput(dateString) {
+    if (!dateString) return '';
+    
+    // Kama ni datetime, chukua date tu
+    if (dateString.includes('T')) {
+        return dateString.split('T')[0];
+    }
+    
+    // Kama ni Date object
+    const date = new Date(dateString);
+    if (!isNaN(date.getTime())) {
+        return date.toISOString().split('T')[0];
+    }
+    
+    return dateString;
+}
+
 function loadInvoicesTable() {
     const tbody = document.getElementById('invoicesTableBody');
     
@@ -30,7 +47,7 @@ function loadInvoicesTable() {
         const row = document.createElement('tr');
         
         const deleteButton = isAdminUser 
-            ? `<button class="btn btn-danger btn-sm delete-btn" onclick="deleteInvoice('${invoice['Invoice No']}')">🗑️ Delete</button>`
+            ? `<button class="btn btn-danger btn-sm delete-btn" onclick="deleteInvoice('${invoice['Invoice No']}')">Delete</button>`
             : '';
         
         row.innerHTML = `
@@ -41,8 +58,8 @@ function loadInvoicesTable() {
             <td>${formatCurrency(invoice['Balance'])}</td>
             <td><span class="status-badge ${getStatusBadgeClass(invoice['Status'])}">${invoice['Status'] || 'Pending'}</span></td>
             <td>
-                <button class="btn btn-primary btn-sm" onclick="viewInvoice('${invoice['Invoice No']}')">👁️ View</button>
-                <button class="btn btn-gold btn-sm" onclick="editInvoice('${invoice['Invoice No']}')">✏️ Edit</button>
+                <button class="btn btn-primary btn-sm" onclick="viewInvoice('${invoice['Invoice No']}')">View</button>
+                <button class="btn btn-gold btn-sm" onclick="editInvoice('${invoice['Invoice No']}')">Edit</button>
                 ${deleteButton}
             </td>
         `;
@@ -51,9 +68,6 @@ function loadInvoicesTable() {
     });
 }
 
-// ============================================
-// GENERATE NEXT INVOICE NO
-// ============================================
 function generateNextInvoiceNo() {
     const invoices = allSystemData.invoices;
     let maxNum = 0;
@@ -75,9 +89,6 @@ function generateNextInvoiceNo() {
     return 'INV-' + padded;
 }
 
-// ============================================
-// OPEN INVOICE MODAL
-// ============================================
 function openInvoiceModal(invoiceNo = null) {
     const modal = document.createElement('div');
     modal.className = 'modal-overlay';
@@ -92,7 +103,6 @@ function openInvoiceModal(invoiceNo = null) {
         invoiceItemsList = [];
     }
     
-    // Get customers for dropdown
     const customers = allSystemData.customers;
     
     const customerOptions = customers.map(customer => {
@@ -125,7 +135,7 @@ function openInvoiceModal(invoiceNo = null) {
                 <div class="form-row">
                     <div class="form-group">
                         <label>Date *</label>
-                        <input type="date" id="invoiceDate" class="form-control" value="${invoice ? invoice['Date'] : getTodayDate()}" required>
+                        <input type="date" id="invoiceDate" class="form-control" value="${invoice ? formatDateForInput(invoice['Date']) : getTodayDate()}" required>
                     </div>
                     <div class="form-group">
                         <label>Work Phase</label>
@@ -151,10 +161,9 @@ function openInvoiceModal(invoiceNo = null) {
                 
                 <hr class="mb-20">
                 
-                <!-- Items Table -->
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                     <h3 style="margin: 0;">Items</h3>
-                    <button type="button" class="btn btn-gold btn-sm" onclick="addInvoiceItem()">+ Add Item</button>
+                    <button type="button" class="btn btn-gold btn-sm" onclick="addInvoiceItem()">Add Item</button>
                 </div>
                 
                 <div class="table-wrapper" style="margin-bottom: 20px;">
@@ -205,11 +214,11 @@ function openInvoiceModal(invoiceNo = null) {
                     </div>
                     <div class="form-group">
                         <label>Site Start Date</label>
-                        <input type="date" id="invoiceStartDate" class="form-control" value="${invoice ? invoice['Site Start Date'] : ''}" onchange="calculateTotalDays()">
+                        <input type="date" id="invoiceStartDate" class="form-control" value="${invoice ? formatDateForInput(invoice['Site Start Date']) : ''}" onchange="calculateTotalDays()">
                     </div>
                     <div class="form-group">
                         <label>Site End Date</label>
-                        <input type="date" id="invoiceEndDate" class="form-control" value="${invoice ? invoice['Site End Date'] : ''}" onchange="calculateTotalDays()">
+                        <input type="date" id="invoiceEndDate" class="form-control" value="${invoice ? formatDateForInput(invoice['Site End Date']) : ''}" onchange="calculateTotalDays()">
                     </div>
                     <div class="form-group">
                         <label>Total Days</label>
@@ -226,20 +235,20 @@ function openInvoiceModal(invoiceNo = null) {
     
     document.body.appendChild(modal);
     
-    // Calculate initial totals
     calculateInvoiceTotal();
     calculateTotalDays();
     
-    // Update customer info kama invoice ina customer
     if (invoice && invoice['Customer Name']) {
         updateCustomerInfo();
     }
     
-    // Handle form submission
     document.getElementById('invoiceForm').addEventListener('submit', async function(e) {
         e.preventDefault();
         
-        // Collect items from table
+        const submitButton = this.querySelector('button[type="submit"]');
+        const originalText = submitButton.innerHTML;
+        showButtonLoading(submitButton, 'Saving...');
+        
         const itemsJSON = collectInvoiceItems();
         
         const invoiceData = {
@@ -263,13 +272,14 @@ function openInvoiceModal(invoiceNo = null) {
             fullName: userFullName
         };
         
-        // Validate - Customer tu ndio required, Invoice No ina auto-generate
         if (!invoiceData.customerName) {
+            hideButtonLoading(submitButton, originalText);
             showError('Please select a customer');
             return;
         }
         
         if (invoiceItemsList.length === 0) {
+            hideButtonLoading(submitButton, originalText);
             showError('Please add at least one item');
             return;
         }
@@ -282,10 +292,12 @@ function openInvoiceModal(invoiceNo = null) {
             result = await fetchData('addInvoice', invoiceData);
         }
         
+        hideButtonLoading(submitButton, originalText);
+        
         if (result.success) {
             showSuccess(result.message);
             closeModal('invoiceModal');
-            await loadAllSystemData();
+            await refreshDataAfterSave();
             loadInvoicesTable();
             loadRecentInvoices();
             loadDashboardStats();
@@ -296,12 +308,9 @@ function openInvoiceModal(invoiceNo = null) {
     });
 }
 
-// ============================================
-// RENDER INVOICE ITEMS ROWS
-// ============================================
 function renderInvoiceItemsRows() {
     if (invoiceItemsList.length === 0) {
-        return '<tr><td colspan="6" class="text-center" style="color: #999;">No items yet. Click "+ Add Item" to start.</td></tr>';
+        return '<tr><td colspan="6" class="text-center" style="color: #999;">No items yet. Click "Add Item" to start.</td></tr>';
     }
     
     return invoiceItemsList.map((item, index) => `
@@ -311,14 +320,11 @@ function renderInvoiceItemsRows() {
             <td><input type="number" class="form-control item-qty" value="${item.qty || ''}" min="0" step="any" placeholder="Qty" oninput="updateInvoiceItem(${index}, 'qty', this.value)"></td>
             <td><input type="number" class="form-control item-rate" value="${item.price || ''}" min="0" step="any" placeholder="Rate" oninput="updateInvoiceItem(${index}, 'price', this.value)"></td>
             <td class="item-amount" style="text-align: right; font-weight: 700;">${formatCurrency(calculateItemAmount(item))}</td>
-            <td><button type="button" class="btn btn-danger btn-sm" onclick="removeInvoiceItem(${index})">✕</button></td>
+            <td><button type="button" class="btn btn-danger btn-sm" onclick="removeInvoiceItem(${index})">Remove</button></td>
         </tr>
     `).join('');
 }
 
-// ============================================
-// ADD INVOICE ITEM
-// ============================================
 function addInvoiceItem() {
     invoiceItemsList.push({
         item: '',
@@ -330,23 +336,16 @@ function addInvoiceItem() {
     calculateInvoiceTotal();
 }
 
-// ============================================
-// REMOVE INVOICE ITEM
-// ============================================
 function removeInvoiceItem(index) {
     invoiceItemsList.splice(index, 1);
     document.getElementById('invoiceItemsTableBody').innerHTML = renderInvoiceItemsRows();
     calculateInvoiceTotal();
 }
 
-// ============================================
-// UPDATE INVOICE ITEM
-// ============================================
 function updateInvoiceItem(index, field, value) {
     if (invoiceItemsList[index]) {
         invoiceItemsList[index][field] = value;
         
-        // Update amount cell
         const amountCell = document.querySelector(`#itemRow_${index} .item-amount`);
         if (amountCell) {
             amountCell.textContent = formatCurrency(calculateItemAmount(invoiceItemsList[index]));
@@ -356,18 +355,12 @@ function updateInvoiceItem(index, field, value) {
     }
 }
 
-// ============================================
-// CALCULATE ITEM AMOUNT
-// ============================================
 function calculateItemAmount(item) {
     const qty = parseFloat(item.qty) || 0;
     const rate = Number(item.price) || 0;
     return qty * rate;
 }
 
-// ============================================
-// COLLECT INVOICE ITEMS
-// ============================================
 function collectInvoiceItems() {
     const items = invoiceItemsList.map((item, index) => {
         return {
@@ -381,9 +374,6 @@ function collectInvoiceItems() {
     return JSON.stringify(items);
 }
 
-// ============================================
-// UPDATE CUSTOMER INFO ON SELECT
-// ============================================
 function updateCustomerInfo() {
     const select = document.getElementById('invoiceCustomer');
     const selectedOption = select.options[select.selectedIndex];
@@ -399,11 +389,7 @@ function updateCustomerInfo() {
     }
 }
 
-// ============================================
-// CALCULATE INVOICE TOTAL
-// ============================================
 function calculateInvoiceTotal() {
-    // Calculate subtotal from items
     let subtotal = invoiceItemsList.reduce((sum, item) => {
         return sum + calculateItemAmount(item);
     }, 0);
@@ -419,9 +405,6 @@ function calculateInvoiceTotal() {
     document.getElementById('invoiceTotal').value = formatCurrency(total);
 }
 
-// ============================================
-// CALCULATE TOTAL DAYS
-// ============================================
 function calculateTotalDays() {
     const startDate = document.getElementById('invoiceStartDate').value;
     const endDate = document.getElementById('invoiceEndDate').value;
@@ -431,9 +414,6 @@ function calculateTotalDays() {
     document.getElementById('invoiceTotalDays').value = days;
 }
 
-// ============================================
-// CALCULATE DAYS BETWEEN
-// ============================================
 function calculateDaysBetween(startDate, endDate) {
     if (!startDate || !endDate) {
         return 0;
@@ -452,9 +432,6 @@ function calculateDaysBetween(startDate, endDate) {
     return diffDays;
 }
 
-// ============================================
-// VIEW INVOICE - PROFORMA FORMAT
-// ============================================
 function viewInvoice(invoiceNo) {
     const invoice = allSystemData.invoices.find(i => i['Invoice No'] === invoiceNo);
     
@@ -479,8 +456,8 @@ function viewInvoice(invoiceNo) {
             
             <div id="invoicePrintableArea" style="padding: 20px; border: 2px solid #DAA520; border-radius: 10px;">
                 
-                <!-- Header -->
                 <div style="text-align: center; margin-bottom: 20px;">
+                    <img src="assets/logo.png" alt="Kashomba Electrical" style="width: 90px; height: auto; margin-bottom: 10px;" onerror="this.style.display='none'">
                     <h1 style="font-size: 1.5rem; font-weight: 800; color: #000; letter-spacing: 2px; margin-bottom: 5px;">${settings['Company_Name'] || 'KASHOMBA ELECTRICAL SOLUTION'}</h1>
                     <p style="font-size: 0.8rem; color: #DAA520; letter-spacing: 3px; font-weight: 600; margin-bottom: 10px;">${settings['Company_Tagline'] || 'Professional Electrical Services'}</p>
                     <p style="font-size: 0.75rem; color: #666;">${settings['Company_Address'] || 'P.O. Box 16112, Dar es salaam, Goba Road Njia Nne'}</p>
@@ -491,7 +468,6 @@ function viewInvoice(invoiceNo) {
                 
                 <hr style="border: 1px solid #DAA520; margin-bottom: 20px;">
                 
-                <!-- Bill To -->
                 <div style="display: flex; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap;">
                     <div>
                         <p><strong>BILL TO:</strong></p>
@@ -507,7 +483,6 @@ function viewInvoice(invoiceNo) {
                     </div>
                 </div>
                 
-                <!-- Items Table -->
                 <div class="table-wrapper" style="margin-bottom: 20px;">
                     <table class="table" style="width: 100%; border-collapse: collapse;">
                         <thead>
@@ -525,7 +500,6 @@ function viewInvoice(invoiceNo) {
                     </table>
                 </div>
                 
-                <!-- Totals -->
                 <div style="display: flex; justify-content: flex-end; margin-bottom: 20px;">
                     <div style="text-align: right;">
                         <p><strong>SUBTOTAL:</strong> ${formatCurrency(invoice['Subtotal'])} Tsh</p>
@@ -538,7 +512,6 @@ function viewInvoice(invoiceNo) {
                 
                 <hr style="border: 1px solid #DAA520; margin-bottom: 20px;">
                 
-                <!-- Payment Instructions -->
                 <div style="display: flex; justify-content: space-between; flex-wrap: wrap; margin-bottom: 20px;">
                     <div>
                         <p style="font-weight: 700; color: #DAA520;">PAYMENT INSTRUCTION</p>
@@ -552,26 +525,21 @@ function viewInvoice(invoiceNo) {
                     </div>
                 </div>
                 
-                <!-- Footer -->
                 <div style="text-align: center; margin-top: 20px;">
                     <p style="font-size: 0.9rem; font-weight: 700; color: #DAA520; letter-spacing: 2px;">LET US LIGHT UP YOUR HOME</p>
                 </div>
                 
             </div>
             
-            <button class="btn btn-primary btn-block mt-20" onclick="printInvoice()">🖨️ Print / PDF</button>
+            <button class="btn btn-primary btn-block mt-20" onclick="printInvoice()">Print / PDF</button>
         </div>
     `;
     
     document.body.appendChild(modal);
     
-    // Load items
     loadViewInvoiceItems(invoice['Items (JSON)']);
 }
 
-// ============================================
-// LOAD VIEW INVOICE ITEMS
-// ============================================
 function loadViewInvoiceItems(itemsJSON) {
     const tbody = document.getElementById('viewInvoiceItemsBody');
     
@@ -610,16 +578,10 @@ function loadViewInvoiceItems(itemsJSON) {
     }
 }
 
-// ============================================
-// EDIT INVOICE
-// ============================================
 function editInvoice(invoiceNo) {
     openInvoiceModal(invoiceNo);
 }
 
-// ============================================
-// DELETE INVOICE (Admin only)
-// ============================================
 async function deleteInvoice(invoiceNo) {
     if (!isAdmin()) {
         showError('Only Admin can delete. Please contact your administrator.');
@@ -638,7 +600,7 @@ async function deleteInvoice(invoiceNo) {
     
     if (result.success) {
         showSuccess(result.message);
-        await loadAllSystemData();
+        await refreshDataAfterSave();
         loadInvoicesTable();
         loadRecentInvoices();
         loadDashboardStats();
