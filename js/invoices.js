@@ -1,6 +1,7 @@
 // ============================================
 // KASHOMBA ELECTRICAL SYSTEM - INVOICES LOGIC v7
 // Fixed: Date format for input fields
+// Fixed: Default status = Pending for new invoice
 // ============================================
 
 let invoiceItemsList = [];
@@ -207,7 +208,7 @@ function openInvoiceModal(invoiceNo = null) {
                     <div class="form-group">
                         <label>Status</label>
                         <select id="invoiceStatus" class="form-control">
-                            <option value="Pending" ${invoice && invoice['Status'] === 'Pending' ? 'selected' : ''}>Pending</option>
+                            <option value="Pending" ${!invoice || invoice['Status'] === 'Pending' ? 'selected' : ''}>Pending</option>
                             <option value="In Progress" ${invoice && invoice['Status'] === 'In Progress' ? 'selected' : ''}>In Progress</option>
                             <option value="Completed" ${invoice && invoice['Status'] === 'Completed' ? 'selected' : ''}>Completed</option>
                         </select>
