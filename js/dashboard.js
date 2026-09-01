@@ -1,6 +1,7 @@
 // ============================================
-// KASHOMBA ELECTRICAL SYSTEM - DASHBOARD LOGIC v14
+// KASHOMBA ELECTRICAL SYSTEM - DASHBOARD LOGIC v15
 // With Labour Halisi (baada ya discount) on Dashboard
+// Fixed: Skip Pending invoices kwenye Labour Charges
 // ============================================
 
 // Global data storage
@@ -221,6 +222,7 @@ function setupRoleBasedUI() {
 
 // ============================================
 // LOAD DASHBOARD STATS - LABOUR HALISI (baada ya discount)
+// Skip Pending invoices
 // ============================================
 function loadDashboardStats() {
     const totalCustomersEl = document.getElementById('totalCustomers');
@@ -237,7 +239,15 @@ function loadDashboardStats() {
     }
     
     // LABOUR HALISI = Labour Charges - (Labour Charges × Discount / 100)
+    // Skip invoices ambazo ziko Pending
     const totalLabourHalisi = (allSystemData.invoices || []).reduce((sum, invoice) => {
+        const status = invoice['Status'] || 'Pending';
+        
+        // Skip Pending invoices
+        if (status === 'Pending') {
+            return sum;
+        }
+        
         const labourCharges = Number(invoice['Labour Charges']) || 0;
         const discount = Number(invoice['Discount (%)']) || 0;
         const labourHalisi = labourCharges - (labourCharges * discount / 100);
