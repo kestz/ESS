@@ -1,7 +1,7 @@
 /* ============================================
    KASHOMBA ELECTRICAL SYSTEM - DASHBOARD STYLES
    Colors: Black, Gold, Teal, White
-   Version: 5.0 - Professional + Mobile + Loading Spinner
+   Version: 5.1 - Professional + Mobile + Loading Spinner + Print Footer
    ============================================ */
 
 * {
@@ -982,6 +982,30 @@ body {
         margin: 0 auto !important;
     }
 }
+
+/* ============================================
+   PRINT FOOTER - Website
+   ============================================ */
+@media print {
+    body::after {
+        content: "www.kashombaelectrical.com";
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        text-align: center;
+        font-size: 10px;
+        color: #666;
+        padding: 5px 0;
+        border-top: 1px solid #ddd;
+        background: #f8f8f8;
+    }
+    
+    @page {
+        margin-bottom: 30px;
+    }
+}
+
 /* ============================================
    FINAL MOBILE FIX - Kila Kipengele Kifit
    ============================================ */
