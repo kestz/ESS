@@ -1,5 +1,6 @@
 // ============================================
-// KASHOMBA ELECTRICAL SYSTEM - INVOICES LOGIC v7
+// KASHOMBA ELECTRICAL SYSTEM - INVOICES LOGIC v8
+// Fixed: Print invoice only (no dashboard tables)
 // Fixed: Date format for input fields
 // Fixed: Default status = Pending for new invoice
 // ============================================
@@ -452,7 +453,10 @@ function viewInvoice(invoiceNo) {
         <div class="modal-content" style="max-width: 900px;">
             <div class="modal-header">
                 <span class="modal-title">Proforma Invoice</span>
-                <button class="modal-close" onclick="closeModal('viewInvoiceModal')">&times;</button>
+                <div>
+                    <button class="btn btn-primary btn-sm no-print" onclick="printInvoice()" style="margin-right: 10px;">🖨️ Print / PDF</button>
+                    <button class="modal-close" onclick="closeModal('viewInvoiceModal')">&times;</button>
+                </div>
             </div>
             
             <div id="invoicePrintableArea" style="padding: 20px; border: 2px solid #DAA520; border-radius: 10px;">
@@ -532,7 +536,6 @@ function viewInvoice(invoiceNo) {
                 
             </div>
             
-            <button class="btn btn-primary btn-block mt-20" onclick="printInvoice()">Print / PDF</button>
         </div>
     `;
     
@@ -577,6 +580,175 @@ function loadViewInvoiceItems(itemsJSON) {
     } catch (error) {
         tbody.innerHTML = '<tr><td colspan="5" class="text-center">No items found</td></tr>';
     }
+}
+
+// ============================================
+// PRINT INVOICE FUNCTION (FIXED)
+// Prints only the invoice, not the dashboard
+// ============================================
+function printInvoice() {
+    const printArea = document.getElementById('invoicePrintableArea');
+    
+    if (!printArea) {
+        showError('Invoice not found');
+        return;
+    }
+    
+    // Create new window for printing
+    const printWindow = window.open('', '_blank', 'width=900,height=650');
+    
+    if (!printWindow) {
+        showError('Please allow popups to print invoice');
+        return;
+    }
+    
+    // Get all styles from the current page
+    const styles = document.querySelectorAll('link[rel="stylesheet"], style');
+    let stylesHtml = '';
+    
+    styles.forEach(style => {
+        if (style.tagName === 'LINK') {
+            stylesHtml += `<link rel="stylesheet" href="${style.href}">`;
+        } else {
+            stylesHtml += `<style>${style.innerHTML}</style>`;
+        }
+    });
+    
+    // Build the print HTML with only the invoice content
+    printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Proforma Invoice</title>
+            ${stylesHtml}
+            <style>
+                /* Reset styles */
+                * {
+                    margin: 0;
+                    padding: 0;
+                    box-sizing: border-box;
+                }
+                
+                body {
+                    margin: 0;
+                    padding: 30px;
+                    font-family: Arial, sans-serif;
+                    background: #ffffff;
+                    color: #000000;
+                }
+                
+                /* Hide everything except invoice */
+                .modal-overlay,
+                .modal-content,
+                .modal-header,
+                .modal-close,
+                .btn,
+                button,
+                .no-print,
+                .sidebar,
+                .topbar,
+                .dashboard-content,
+                .table-container,
+                .recent-invoices,
+                .invoice-list-table,
+                .data-table {
+                    display: none !important;
+                }
+                
+                /* Show only invoice */
+                #invoicePrintableArea {
+                    display: block !important;
+                    visibility: visible !important;
+                    border: 2px solid #DAA520 !important;
+                    border-radius: 10px !important;
+                    padding: 25px !important;
+                    margin: 0 auto !important;
+                    width: 100% !important;
+                    max-width: 900px !important;
+                    background: #ffffff !important;
+                }
+                
+                /* Table styles */
+                .table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-bottom: 20px;
+                }
+                
+                .table th {
+                    background: #0a0a0a !important;
+                    color: #ffffff !important;
+                    padding: 10px !important;
+                    text-align: left;
+                    font-size: 12px;
+                    border: 1px solid #ddd;
+                }
+                
+                .table td {
+                    padding: 10px !important;
+                    text-align: left;
+                    font-size: 12px;
+                    border: 1px solid #ddd;
+                }
+                
+                /* Print-specific styles */
+                @media print {
+                    body {
+                        padding: 0;
+                        margin: 0;
+                    }
+                    
+                    #invoicePrintableArea {
+                        border: none !important;
+                        border-radius: 0 !important;
+                        padding: 15px !important;
+                        max-width: 100% !important;
+                    }
+                    
+                    .no-print {
+                        display: none !important;
+                    }
+                    
+                    @page {
+                        margin: 15mm;
+                    }
+                }
+                
+                /* On screen preview */
+                @media screen {
+                    #invoicePrintableArea {
+                        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+                    }
+                }
+            </style>
+        </head>
+        <body>
+            ${printArea.outerHTML}
+            <script>
+                window.onload = function() {
+                    // Auto print after load
+                    setTimeout(function() {
+                        window.print();
+                    }, 500);
+                    
+                    // Close window after print dialog closes
+                    window.onafterprint = function() {
+                        setTimeout(function() {
+                            window.close();
+                        }, 500);
+                    };
+                    
+                    // Fallback: close if user cancels
+                    setTimeout(function() {
+                        window.close();
+                    }, 60000);
+                };
+            <\/script>
+        </body>
+        </html>
+    `);
+    
+    printWindow.document.close();
 }
 
 function editInvoice(invoiceNo) {
