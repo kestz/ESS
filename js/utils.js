@@ -1,5 +1,6 @@
 // ============================================
-// KASHOMBA ELECTRICAL SYSTEM - UTILITY FUNCTIONS v7
+// KASHOMBA ELECTRICAL SYSTEM - UTILITY FUNCTIONS v8
+// Removed printInvoice() - now in invoices.js
 // With Cache Buster + Fresh Data Fetch + Blocking Loading Overlay
 // ============================================
 
@@ -365,13 +366,6 @@ function debounce(func, wait) {
 // ============================================
 function confirmAction(message) {
     return confirm(message);
-}
-
-// ============================================
-// PRINT INVOICE
-// ============================================
-function printInvoice() {
-    window.print();
 }
 
 // ============================================
